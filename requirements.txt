@@ -1,0 +1,5 @@
+torch
+tqdm
+torchvision
+matplotlib
+python-dotenv
