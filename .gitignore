@@ -1,3 +1,5 @@
 /images/
 .idea
 data/MNIST/
+/config/
+/wandb/
