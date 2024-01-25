@@ -1,5 +1,7 @@
-torch
-tqdm
-torchvision
-matplotlib
-python-dotenv
+torch==2.1.2
+tqdm==4.66.1
+torchvision==0.16.2
+matplotlib==3.8.2
+python-dotenv==1.0.1
+wandb==0.16.2
+

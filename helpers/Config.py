@@ -1,6 +1,9 @@
 import os
+import time
+
 import dotenv
 import torch
+import wandb
 from torch import nn
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -9,6 +12,7 @@ DEFAULT_DATA_FOLDER = ROOT_DIR + "/data/"
 DEFAULT_ENV_FILE = ROOT_DIR + "/config/tmp.env"
 DEFAULT_N_EPOCHS = 200
 DEFAULT_BATCH_SIZE = 128
+DEFAULT_RUN_NAME = 'experiment'
 DEFAULT_NOISE_DIMENSION = 64
 DEFAULT_LR = 0.00001
 DEFAULT_DISPLAY_STEP = 500
@@ -75,6 +79,25 @@ class Config:
         self.criterion = nn.BCEWithLogitsLoss()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        self.wandb_project = kwargs.get('WANDB_PROJECT', False) or os.environ.get('WANDB_PROJECT', False)
+
+        self.store_wandb_images = kwargs.get('STORE_WANDB_IMAGES', False) or os.environ.get('STORE_WANDB_IMAGES', False)
+        self.store_wandb_images = self.store_wandb_images.lower() == 'true'
+
+        self.visualize_images = kwargs.get('VISUALIZE_IMAGES', False) or os.environ.get('VISUALIZE_IMAGES', False)
+        self.visualize_images = self.visualize_images.lower() == 'true'
+
+        self.store_local_images = kwargs.get('STORE_LOCAL_IMAGES', False) or os.environ.get('STORE_LOCAL_IMAGES', False)
+        self.store_local_images = self.store_local_images.lower() == 'true'
+
+        self.run_name = kwargs.get('RUN_NAME', False) or os.environ.get('RUN_NAME', False)
+        self.run_name = self.run_name if self.run_name else DEFAULT_RUN_NAME
+        self.run_name = time.strftime("%Y.%m.%d_%H.%M.%S") + '_' + self.run_name
+
+        print(f'Current settings: {self.__dict__}')
+
+        self.init_wandb()
+
         torch.manual_seed(123)
 
     def load_env(self):
@@ -92,3 +115,12 @@ class Config:
                 print(f'Failed to load config! -  {self.env_file}')
 
         return res
+
+    def init_wandb(self):
+        """ Initialize the wandb project if the project name is provided
+        """
+        if not self.wandb_project or not os.environ.get('WANDB_API_KEY', None):
+            return
+
+        wandb.login(key=os.environ.get('WANDB_API_KEY'))
+        wandb.init(project=self.wandb_project, config=self.__dict__, name=self.run_name)
